@@ -1,0 +1,108 @@
+@extends('layouts.app')
+
+@section('content')
+<div style="max-width: 900px; margin: 0 auto; padding: 32px 16px;">
+    <div style="display:flex;gap:0;background:#fff;border:1px solid var(--border);border-radius:4px;overflow:hidden;min-height:500px;">
+        {{-- Image --}}
+        <div style="flex:1;background:#000;display:flex;align-items:center;justify-content:center;max-width:60%;">
+            <img src="{{ $post->image_url }}" alt="post"
+                 style="width:100%;max-height:600px;object-fit:contain;display:block;">
+        </div>
+
+        {{-- Sidebar --}}
+        <div style="width:340px;flex-shrink:0;display:flex;flex-direction:column;border-left:1px solid var(--border);">
+            {{-- User header --}}
+            <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);">
+                <a href="{{ route('profile.show', $post->user) }}">
+                    <img src="{{ $post->user->avatar_url }}" alt="{{ $post->user->name }}"
+                         style="width:36px;height:36px;border-radius:50%;object-fit:cover;">
+                </a>
+                <a href="{{ route('profile.show', $post->user) }}"
+                   style="font-weight:600;font-size:14px;color:var(--text);text-decoration:none;flex:1;">
+                    {{ $post->user->username ?? $post->user->name }}
+                </a>
+                @if(auth()->id() === $post->user_id)
+                    <form method="POST" action="{{ route('posts.destroy', $post) }}"
+                          onsubmit="return confirm('¿Eliminar este post?')">
+                        @csrf @method('DELETE')
+                        <button type="submit" style="background:none;border:none;cursor:pointer;color:var(--text-muted);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px">
+                                <polyline points="3 6 5 6 21 6"/>
+                                <path d="M19 6l-1 14H6L5 6"/>
+                                <path d="M9 6V4h6v2"/>
+                            </svg>
+                        </button>
+                    </form>
+                @endif
+            </div>
+
+            {{-- Caption + comments --}}
+            <div style="flex:1;overflow-y:auto;padding:16px;">
+                @if($post->caption)
+                    <div style="display:flex;gap:12px;margin-bottom:16px;">
+                        <img src="{{ $post->user->avatar_url }}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;">
+                        <div style="font-size:14px;">
+                            <span style="font-weight:600;">{{ $post->user->username ?? $post->user->name }}</span>
+                            {{ $post->caption }}
+                            <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">{{ $post->created_at->diffForHumans() }}</div>
+                        </div>
+                    </div>
+                @endif
+
+                @foreach($post->comments as $comment)
+                    <div style="display:flex;gap:12px;margin-bottom:12px;align-items:flex-start;">
+                        <img src="{{ $comment->user->avatar_url }}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;">
+                        <div style="flex:1;font-size:14px;">
+                            <span style="font-weight:600;">{{ $comment->user->username ?? $comment->user->name }}</span>
+                            {{ $comment->body }}
+                            <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">{{ $comment->created_at->diffForHumans() }}</div>
+                        </div>
+                        @if(auth()->id() === $comment->user_id)
+                            <form method="POST" action="{{ route('comments.destroy', $comment) }}">
+                                @csrf @method('DELETE')
+                                <button type="submit" style="background:none;border:none;cursor:pointer;color:var(--text-muted);padding:0;">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px">
+                                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                                    </svg>
+                                </button>
+                            </form>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
+
+            {{-- Actions --}}
+            <div style="border-top:1px solid var(--border);padding:12px 16px;">
+                <div style="display:flex;align-items:center;gap:16px;margin-bottom:8px;">
+                    <form method="POST" action="{{ route('likes.toggle', $post) }}">
+                        @csrf
+                        <button type="submit" style="background:none;border:none;cursor:pointer;padding:0;display:flex;align-items:center;">
+                            @if($post->isLikedBy(auth()->user()))
+                                <svg viewBox="0 0 24 24" fill="#ed4956" stroke="#ed4956" stroke-width="2" style="width:24px;height:24px">
+                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                                </svg>
+                            @else
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:24px;height:24px">
+                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                                </svg>
+                            @endif
+                        </button>
+                    </form>
+                </div>
+                @if($post->likes->count() > 0)
+                    <div style="font-size:14px;font-weight:600;margin-bottom:8px;">
+                        {{ $post->likes->count() }} {{ $post->likes->count() === 1 ? 'me gusta' : 'me gustas' }}
+                    </div>
+                @endif
+                <form method="POST" action="{{ route('comments.store', $post) }}"
+                      style="display:flex;gap:8px;border-top:1px solid var(--border);padding-top:10px;">
+                    @csrf
+                    <input type="text" name="body" placeholder="Añade un comentario..."
+                           style="flex:1;border:none;outline:none;font-size:14px;background:transparent;font-family:inherit;">
+                    <button type="submit" style="background:none;border:none;color:var(--primary);font-weight:600;font-size:14px;cursor:pointer;">Publicar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection

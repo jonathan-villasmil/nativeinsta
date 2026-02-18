@@ -13,7 +13,14 @@ class NativeAppServiceProvider implements ProvidesPhpIni
      */
     public function boot(): void
     {
-        Window::open();
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+
+        Window::open()
+            ->width(1100)
+            ->height(750)
+            ->minWidth(800)
+            ->minHeight(600)
+            ->title('NativeInsta');
     }
 
     /**
