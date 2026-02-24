@@ -6,6 +6,7 @@ use App\Http\Controllers\FollowController;
 use App\Http\Controllers\LikeController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SearchController;
 use Illuminate\Support\Facades\Route;
 
 // Auth routes (Breeze)
@@ -34,6 +35,9 @@ Route::middleware('auth')->group(function () {
 
     // Explore
     Route::get('/explore', [PostController::class, 'explore'])->name('explore');
+
+    // Search
+    Route::get('/search', [SearchController::class, 'index'])->name('search');
 
     // Posts
     Route::get('/posts/create', [PostController::class, 'create'])->name('posts.create');

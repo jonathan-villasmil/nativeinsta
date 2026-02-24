@@ -86,6 +86,13 @@
                 </svg>
                 Inicio
             </a>
+            <a href="{{ route('search') }}" class="nav-item {{ request()->routeIs('search') ? 'active' : '' }}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="{{ request()->routeIs('search') ? '2.5' : '2' }}">
+                    <circle cx="11" cy="11" r="8"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                Buscar
+            </a>
             <a href="{{ route('explore') }}" class="nav-item {{ request()->routeIs('explore') ? 'active' : '' }}">
                 <svg viewBox="0 0 24 24" fill="{{ request()->routeIs('explore') ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="2">
                     <circle cx="11" cy="11" r="8"/>
