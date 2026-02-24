@@ -118,6 +118,29 @@
                 </div>
                 Notificaciones
             </a>
+            @php
+                use App\Models\Conversation;
+                $dmUnread = Conversation::where('user_one_id', auth()->id())
+                    ->orWhere('user_two_id', auth()->id())
+                    ->get()
+                    ->sum(fn($c) => $c->unreadCountFor(auth()->user()));
+            @endphp
+            <a href="{{ route('messages.index') }}" class="nav-item {{ request()->routeIs('messages.*') ? 'active' : '' }}">
+                <div style="position:relative;width:24px;height:24px;flex-shrink:0;">
+                    <svg viewBox="0 0 24 24" fill="{{ request()->routeIs('messages.*') ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="2" style="width:24px;height:24px;">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    @if($dmUnread > 0)
+                        <span style="position:absolute;top:-4px;right:-4px;background:#ed4956;color:#fff;
+                                     font-size:10px;font-weight:700;min-width:16px;height:16px;border-radius:8px;
+                                     display:flex;align-items:center;justify-content:center;padding:0 3px;
+                                     border:2px solid #fff;">
+                            {{ $dmUnread > 9 ? '9+' : $dmUnread }}
+                        </span>
+                    @endif
+                </div>
+                Mensajes
+            </a>
             <a href="{{ route('posts.create') }}" class="nav-item {{ request()->routeIs('posts.create') ? 'active' : '' }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>

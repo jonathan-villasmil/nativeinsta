@@ -4,6 +4,7 @@ use App\Http\Controllers\CommentController;
 use App\Http\Controllers\FeedController;
 use App\Http\Controllers\FollowController;
 use App\Http\Controllers\LikeController;
+use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\ProfileController;
@@ -48,6 +49,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/stories/{user}', [StoryController::class, 'show'])->name('stories.show');
     Route::post('/stories', [StoryController::class, 'store'])->name('stories.store');
     Route::delete('/stories/{story}', [StoryController::class, 'destroy'])->name('stories.destroy');
+
+    // Messages
+    Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
+    Route::get('/messages/{user}', [MessageController::class, 'show'])->name('messages.show');
+    Route::post('/messages/{user}', [MessageController::class, 'store'])->name('messages.store');
 
     // Posts
     Route::get('/posts/create', [PostController::class, 'create'])->name('posts.create');

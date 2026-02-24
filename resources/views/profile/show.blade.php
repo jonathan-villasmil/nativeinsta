@@ -18,11 +18,13 @@
                         @csrf @method('DELETE')
                         <button type="submit" class="btn-outline">Siguiendo</button>
                     </form>
+                    <a href="{{ route('messages.show', $user) }}" class="btn-outline">Mensaje</a>
                 @else
                     <form method="POST" action="{{ route('follow.store', $user) }}">
                         @csrf
                         <button type="submit" class="btn-primary">Seguir</button>
                     </form>
+                    <a href="{{ route('messages.show', $user) }}" class="btn-outline">Mensaje</a>
                 @endif
             </div>
 
