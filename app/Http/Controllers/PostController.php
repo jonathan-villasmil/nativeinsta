@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\Mention;
 use App\Models\Post;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -25,16 +26,21 @@ class PostController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'image' => 'required|image|max:5120',
+            'image'   => 'required|image|max:5120',
             'caption' => 'nullable|string|max:2200',
         ]);
 
         $path = $request->file('image')->store('posts', 'public');
 
-        auth()->user()->posts()->create([
+        $post = auth()->user()->posts()->create([
             'image_path' => $path,
-            'caption' => $request->caption,
+            'caption'    => $request->caption,
         ]);
+
+        // Notify any @mentioned users in the caption
+        if ($request->caption) {
+            Mention::notifyMentions($request->caption, auth()->id(), $post);
+        }
 
         return redirect()->route('feed')->with('success', '¡Post publicado!');
     }

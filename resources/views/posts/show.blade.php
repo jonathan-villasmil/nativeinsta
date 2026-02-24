@@ -43,7 +43,7 @@
                         <img src="{{ $post->user->avatar_url }}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;">
                         <div style="font-size:14px;">
                             <span style="font-weight:600;">{{ $post->user->username ?? $post->user->name }}</span>
-                            {{ $post->caption }}
+                            @mention($post->caption)
                             <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">{{ $post->created_at->diffForHumans() }}</div>
                         </div>
                     </div>
@@ -56,7 +56,7 @@
                              style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;">
                         <div style="flex:1;font-size:14px;">
                             <span style="font-weight:600;">{{ $comment->user->username ?? $comment->user->name }}</span>
-                            {{ $comment->body }}
+                            @mention($comment->body)
                             <div style="display:flex;align-items:center;gap:12px;margin-top:4px;">
                                 <span style="font-size:11px;color:var(--text-muted);">{{ $comment->created_at->diffForHumans() }}</span>
                                 @if($comment->likes()->count() > 0)
