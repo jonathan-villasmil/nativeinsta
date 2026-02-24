@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\CommentLikeController;
 use App\Http\Controllers\FeedController;
 use App\Http\Controllers\FollowController;
 use App\Http\Controllers\LikeController;
@@ -41,6 +42,9 @@ Route::middleware('auth')->group(function () {
 
     // Search
     Route::get('/search', [SearchController::class, 'index'])->name('search');
+
+    // Comment likes
+    Route::post('/comment-likes/{comment}', [CommentLikeController::class, 'toggle'])->name('comment-likes.toggle');
 
     // Notifications
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications');

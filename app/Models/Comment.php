@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Comment extends Model
 {
@@ -17,5 +18,16 @@ class Comment extends Model
     public function post(): BelongsTo
     {
         return $this->belongsTo(Post::class);
+    }
+
+    public function likes(): HasMany
+    {
+        return $this->hasMany(CommentLike::class);
+    }
+
+    public function isLikedBy(?User $user): bool
+    {
+        if (!$user) return false;
+        return $this->likes()->where('user_id', $user->id)->exists();
     }
 }

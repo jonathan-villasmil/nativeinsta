@@ -50,23 +50,47 @@
                 @endif
 
                 @foreach($post->comments as $comment)
-                    <div style="display:flex;gap:12px;margin-bottom:12px;align-items:flex-start;">
-                        <img src="{{ $comment->user->avatar_url }}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;">
+                    @php $liked = $comment->isLikedBy(auth()->user()); @endphp
+                    <div style="display:flex;gap:10px;margin-bottom:12px;align-items:flex-start;">
+                        <img src="{{ $comment->user->avatar_url }}"
+                             style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;">
                         <div style="flex:1;font-size:14px;">
                             <span style="font-weight:600;">{{ $comment->user->username ?? $comment->user->name }}</span>
                             {{ $comment->body }}
-                            <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">{{ $comment->created_at->diffForHumans() }}</div>
+                            <div style="display:flex;align-items:center;gap:12px;margin-top:4px;">
+                                <span style="font-size:11px;color:var(--text-muted);">{{ $comment->created_at->diffForHumans() }}</span>
+                                @if($comment->likes()->count() > 0)
+                                    <span style="font-size:11px;color:var(--text-muted);font-weight:600;">
+                                        {{ $comment->likes()->count() }} {{ $comment->likes()->count() === 1 ? 'me gusta' : 'me gustas' }}
+                                    </span>
+                                @endif
+                                @if(auth()->id() === $comment->user_id)
+                                    <form method="POST" action="{{ route('comments.destroy', $comment) }}" style="margin:0;">
+                                        @csrf @method('DELETE')
+                                        <button type="submit"
+                                                style="background:none;border:none;cursor:pointer;color:var(--text-muted);padding:0;font-size:11px;">
+                                            Eliminar
+                                        </button>
+                                    </form>
+                                @endif
+                            </div>
                         </div>
-                        @if(auth()->id() === $comment->user_id)
-                            <form method="POST" action="{{ route('comments.destroy', $comment) }}">
-                                @csrf @method('DELETE')
-                                <button type="submit" style="background:none;border:none;cursor:pointer;color:var(--text-muted);padding:0;">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px">
-                                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                                    </svg>
-                                </button>
-                            </form>
-                        @endif
+                        {{-- Comment like button --}}
+                        <form method="POST" action="{{ route('comment-likes.toggle', $comment) }}" style="margin:0;flex-shrink:0;">
+                            @csrf
+                            <button type="submit"
+                                    style="background:none;border:none;cursor:pointer;padding:2px;display:flex;align-items:center;gap:3px;color:{{ $liked ? '#ed4956' : 'var(--text-muted)' }};">
+                                <svg viewBox="0 0 24 24"
+                                     fill="{{ $liked ? '#ed4956' : 'none' }}"
+                                     stroke="{{ $liked ? '#ed4956' : 'currentColor' }}"
+                                     stroke-width="2"
+                                     style="width:14px;height:14px;transition:transform 0.15s;"
+                                     onmouseover="this.style.transform='scale(1.2)'"
+                                     onmouseout="this.style.transform='scale(1)'">
+                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                                </svg>
+                            </button>
+                        </form>
                     </div>
                 @endforeach
             </div>
