@@ -13,6 +13,9 @@ class FollowController extends Controller
 
         auth()->user()->following()->syncWithoutDetaching([$user->id]);
 
+        // Notify followed user
+        $user->notify('follow', auth()->id(), $user);
+
         return back();
     }
 

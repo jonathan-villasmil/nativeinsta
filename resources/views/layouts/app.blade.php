@@ -100,6 +100,24 @@
                 </svg>
                 Explorar
             </a>
+            @php $unread = auth()->user()->unreadNotificationsCount(); @endphp
+            <a href="{{ route('notifications') }}" class="nav-item {{ request()->routeIs('notifications') ? 'active' : '' }}">
+                <div style="position:relative;width:24px;height:24px;flex-shrink:0;">
+                    <svg viewBox="0 0 24 24" fill="{{ request()->routeIs('notifications') ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="2" style="width:24px;height:24px;">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                    </svg>
+                    @if($unread > 0)
+                        <span style="position:absolute;top:-4px;right:-4px;background:#ed4956;color:#fff;
+                                     font-size:10px;font-weight:700;min-width:16px;height:16px;border-radius:8px;
+                                     display:flex;align-items:center;justify-content:center;padding:0 3px;
+                                     border:2px solid #fff;">
+                            {{ $unread > 9 ? '9+' : $unread }}
+                        </span>
+                    @endif
+                </div>
+                Notificaciones
+            </a>
             <a href="{{ route('posts.create') }}" class="nav-item {{ request()->routeIs('posts.create') ? 'active' : '' }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>

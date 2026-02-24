@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -70,8 +71,32 @@ class User extends Authenticatable
     public function getAvatarUrlAttribute(): string
     {
         if ($this->avatar) {
-            return asset('storage/' . $this->avatar);
+            return route('img', ['path' => 'avatars/' . basename($this->avatar)]);
         }
         return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&background=6366f1&color=fff&size=128';
+    }
+
+    public function appNotifications(): HasMany
+    {
+        return $this->hasMany(Notification::class)->latest();
+    }
+
+    public function unreadNotificationsCount(): int
+    {
+        return $this->appNotifications()->whereNull('read_at')->count();
+    }
+
+    public function notify(string $type, int $actorId, Model $notifiable): void
+    {
+        // Don't notify yourself
+        if ($this->id === $actorId) return;
+
+        // Avoid duplicate notifications of the same type on the same item
+        $this->appNotifications()->firstOrCreate([
+            'actor_id'        => $actorId,
+            'type'            => $type,
+            'notifiable_id'   => $notifiable->id,
+            'notifiable_type' => get_class($notifiable),
+        ]);
     }
 }

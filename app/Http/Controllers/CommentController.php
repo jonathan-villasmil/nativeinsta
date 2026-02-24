@@ -14,10 +14,13 @@ class CommentController extends Controller
             'body' => 'required|string|max:500',
         ]);
 
-        $post->comments()->create([
+        $comment = $post->comments()->create([
             'user_id' => auth()->id(),
             'body'    => $request->body,
         ]);
+
+        // Notify post owner
+        $post->user->notify('comment', auth()->id(), $post);
 
         return back();
     }

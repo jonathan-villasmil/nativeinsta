@@ -4,6 +4,7 @@ use App\Http\Controllers\CommentController;
 use App\Http\Controllers\FeedController;
 use App\Http\Controllers\FollowController;
 use App\Http\Controllers\LikeController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SearchController;
@@ -38,6 +39,9 @@ Route::middleware('auth')->group(function () {
 
     // Search
     Route::get('/search', [SearchController::class, 'index'])->name('search');
+
+    // Notifications
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications');
 
     // Posts
     Route::get('/posts/create', [PostController::class, 'create'])->name('posts.create');
