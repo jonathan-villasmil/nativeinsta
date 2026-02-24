@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 
 class FeedController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->user();
 
@@ -19,7 +19,19 @@ class FeedController extends Controller
         $posts = Post::with(['user', 'likes', 'comments.user'])
             ->whereIn('user_id', $followingIds)
             ->latest()
-            ->paginate(10);
+            ->paginate(5);
+
+        // AJAX (infinite scroll) → return only post HTML + pagination meta
+        if ($request->ajax()) {
+            $html = '';
+            foreach ($posts as $post) {
+                $html .= view('components.post-card', compact('post'))->render();
+            }
+            return response()->json([
+                'html'     => $html,
+                'nextPage' => $posts->hasMorePages() ? $posts->currentPage() + 1 : null,
+            ]);
+        }
 
         // Stories: current user first, then followed users with active stories
         $storyUsers = User::whereIn('id', $followingIds)

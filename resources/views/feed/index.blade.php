@@ -142,13 +142,33 @@
             <a href="{{ route('explore') }}" class="btn-primary">Explorar</a>
         </div>
     @else
-        @foreach($posts as $post)
-            @include('components.post-card', ['post' => $post])
-        @endforeach
-        <div style="margin-top:24px;">{{ $posts->links() }}</div>
+        <div id="posts-container">
+            @foreach($posts as $post)
+                @include('components.post-card', ['post' => $post])
+            @endforeach
+        </div>
+
+        {{-- Infinite scroll sentinel --}}
+        <div id="scroll-sentinel" style="height:40px;display:flex;align-items:center;justify-content:center;">
+            <div id="scroll-spinner" style="display:none;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"
+                     style="width:28px;height:28px;animation:spin 0.8s linear infinite;">
+                    <circle cx="12" cy="12" r="10" stroke-dasharray="40" stroke-dashoffset="10"/>
+                </svg>
+            </div>
+            <p id="scroll-end" style="display:none;color:var(--text-muted);font-size:13px;margin:0;">Ya has visto todo 👋</p>
+        </div>
+        @if($posts->hasMorePages())
+            <div id="next-page" data-page="{{ $posts->currentPage() + 1 }}"></div>
+        @else
+            <p style="text-align:center;color:var(--text-muted);font-size:13px;margin:8px 0 32px;">Ya has visto todo 👋</p>
+        @endif
     @endif
 </div>
 
+<style>
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
 <script>
     // ─── Upload modal ──────────────────────────────────────────
     function openStoryUpload() {
@@ -233,5 +253,51 @@
         if (e.key === 'ArrowRight') nextStory();
         if (e.key === 'ArrowLeft')  prevStory();
     });
+
+    // ─── Infinite scroll ───────────────────────────────────────
+    (function () {
+        const sentinel  = document.getElementById('scroll-sentinel');
+        const nextMeta  = document.getElementById('next-page');
+        const container = document.getElementById('posts-container');
+        const spinner   = document.getElementById('scroll-spinner');
+        const endMsg    = document.getElementById('scroll-end');
+
+        if (!sentinel || !nextMeta || !container) return; // no posts / no more pages
+
+        let loading = false;
+        let nextPage = parseInt(nextMeta.dataset.page, 10);
+
+        const observer = new IntersectionObserver(async (entries) => {
+            if (!entries[0].isIntersecting || loading) return;
+            loading = true;
+            spinner.style.display = 'block';
+
+            try {
+                const res  = await fetch(`/feed?page=${nextPage}`, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                const data = await res.json();
+
+                // Append new post cards
+                container.insertAdjacentHTML('beforeend', data.html);
+
+                if (data.nextPage) {
+                    nextPage = data.nextPage;
+                    loading  = false;
+                    spinner.style.display = 'none';
+                } else {
+                    // No more pages — stop observing
+                    observer.disconnect();
+                    spinner.style.display = 'none';
+                    endMsg.style.display  = 'block';
+                }
+            } catch (e) {
+                spinner.style.display = 'none';
+                loading = false;
+            }
+        }, { threshold: 0.1 });
+
+        observer.observe(sentinel);
+    })();
 </script>
 @endsection
