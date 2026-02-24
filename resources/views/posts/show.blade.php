@@ -54,27 +54,71 @@
                     <div style="display:flex;gap:10px;margin-bottom:12px;align-items:flex-start;">
                         <img src="{{ $comment->user->avatar_url }}"
                              style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;">
+
                         <div style="flex:1;font-size:14px;">
-                            <span style="font-weight:600;">{{ $comment->user->username ?? $comment->user->name }}</span>
-                            @rendertext($comment->body)
-                            <div style="display:flex;align-items:center;gap:12px;margin-top:4px;">
-                                <span style="font-size:11px;color:var(--text-muted);">{{ $comment->created_at->diffForHumans() }}</span>
-                                @if($comment->likes()->count() > 0)
-                                    <span style="font-size:11px;color:var(--text-muted);font-weight:600;">
-                                        {{ $comment->likes()->count() }} {{ $comment->likes()->count() === 1 ? 'me gusta' : 'me gustas' }}
+                            {{-- View mode --}}
+                            <div id="comment-view-{{ $comment->id }}">
+                                <span style="font-weight:600;">{{ $comment->user->username ?? $comment->user->name }}</span>
+                                @rendertext($comment->body)
+                                <div style="display:flex;align-items:center;gap:12px;margin-top:4px;">
+                                    <span style="font-size:11px;color:var(--text-muted);">
+                                        {{ $comment->created_at->diffForHumans() }}
+                                        @if($comment->updated_at->gt($comment->created_at->addSecond()))
+                                            · <em>editado</em>
+                                        @endif
                                     </span>
-                                @endif
-                                @if(auth()->id() === $comment->user_id)
-                                    <form method="POST" action="{{ route('comments.destroy', $comment) }}" style="margin:0;">
-                                        @csrf @method('DELETE')
-                                        <button type="submit"
+                                    @if($comment->likes()->count() > 0)
+                                        <span style="font-size:11px;color:var(--text-muted);font-weight:600;">
+                                            {{ $comment->likes()->count() }} {{ $comment->likes()->count() === 1 ? 'me gusta' : 'me gustas' }}
+                                        </span>
+                                    @endif
+                                    @if(auth()->id() === $comment->user_id)
+                                        <button type="button"
+                                                onclick="startEdit({{ $comment->id }}, {{ json_encode($comment->body) }})"
                                                 style="background:none;border:none;cursor:pointer;color:var(--text-muted);padding:0;font-size:11px;">
-                                            Eliminar
+                                            Editar
                                         </button>
-                                    </form>
-                                @endif
+                                        <form method="POST" action="{{ route('comments.destroy', $comment) }}" style="margin:0;">
+                                            @csrf @method('DELETE')
+                                            <button type="submit"
+                                                    style="background:none;border:none;cursor:pointer;color:var(--text-muted);padding:0;font-size:11px;">
+                                                Eliminar
+                                            </button>
+                                        </form>
+                                    @endif
+                                </div>
                             </div>
+
+                            {{-- Edit mode (hidden by default) --}}
+                            @if(auth()->id() === $comment->user_id)
+                            <div id="comment-edit-{{ $comment->id }}" style="display:none;margin-top:4px;">
+                                <form method="POST" action="{{ route('comments.update', $comment) }}">
+                                    @csrf @method('PUT')
+                                    <textarea id="comment-input-{{ $comment->id }}"
+                                              name="body"
+                                              maxlength="500"
+                                              style="width:100%;border:1px solid var(--border);border-radius:8px;padding:8px 10px;
+                                                     font-size:14px;font-family:inherit;resize:none;outline:none;
+                                                     background:var(--bg);color:var(--text);line-height:1.4;"
+                                              rows="2"></textarea>
+                                    <div style="display:flex;gap:8px;margin-top:6px;">
+                                        <button type="submit"
+                                                style="background:var(--primary);color:#fff;border:none;border-radius:6px;
+                                                       padding:5px 14px;font-size:13px;font-weight:600;cursor:pointer;">
+                                            Guardar
+                                        </button>
+                                        <button type="button"
+                                                onclick="cancelEdit({{ $comment->id }})"
+                                                style="background:none;border:1px solid var(--border);border-radius:6px;
+                                                       padding:5px 14px;font-size:13px;cursor:pointer;color:var(--text-muted);">
+                                            Cancelar
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                            @endif
                         </div>
+
                         {{-- Comment like button --}}
                         <form method="POST" action="{{ route('comment-likes.toggle', $comment) }}" style="margin:0;flex-shrink:0;">
                             @csrf
@@ -130,3 +174,24 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+function startEdit(id, body) {
+    document.getElementById('comment-view-' + id).style.display = 'none';
+    const editDiv = document.getElementById('comment-edit-' + id);
+    const input   = document.getElementById('comment-input-' + id);
+    input.value   = body;
+    editDiv.style.display = 'block';
+    input.focus();
+    // Auto-resize
+    input.style.height = 'auto';
+    input.style.height = input.scrollHeight + 'px';
+}
+
+function cancelEdit(id) {
+    document.getElementById('comment-edit-' + id).style.display = 'none';
+    document.getElementById('comment-view-' + id).style.display = 'block';
+}
+</script>
+@endpush

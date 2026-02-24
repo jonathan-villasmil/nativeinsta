@@ -29,6 +29,17 @@ class CommentController extends Controller
         return back();
     }
 
+    public function update(\Illuminate\Http\Request $request, Comment $comment)
+    {
+        abort_if(auth()->id() !== $comment->user_id, 403);
+
+        $request->validate(['body' => 'required|string|max:500']);
+
+        $comment->update(['body' => $request->body]);
+
+        return back();
+    }
+
     public function destroy(Comment $comment)
     {
         abort_if(auth()->id() !== $comment->user_id, 403);

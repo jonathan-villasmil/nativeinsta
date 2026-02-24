@@ -176,5 +176,6 @@
         @endif
         @yield('content')
     </main>
+    @stack('scripts')
 </body>
 </html>

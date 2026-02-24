@@ -82,6 +82,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/likes/{post}', [LikeController::class, 'toggle'])->name('likes.toggle');
 
     // Comments
-    Route::post('/comments/{post}', [CommentController::class, 'store'])->name('comments.store');
-    Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
+    Route::post('/comments/{post}',    [CommentController::class, 'store'])  ->name('comments.store');
+    Route::put('/comments/{comment}',  [CommentController::class, 'update']) ->name('comments.update');
+    Route::delete('/comments/{comment}',[CommentController::class, 'destroy'])->name('comments.destroy');
 });
