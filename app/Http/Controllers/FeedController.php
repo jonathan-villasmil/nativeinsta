@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Post;
+use App\Models\Story;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class FeedController extends Controller
@@ -19,6 +21,14 @@ class FeedController extends Controller
             ->latest()
             ->paginate(10);
 
-        return view('feed.index', compact('posts'));
+        // Stories: current user first, then followed users with active stories
+        $storyUsers = User::whereIn('id', $followingIds)
+            ->whereHas('stories')
+            ->with(['stories' => fn ($q) => $q->latest()])
+            ->get()
+            ->sortByDesc(fn ($u) => $u->id === $user->id ? PHP_INT_MAX : 0)
+            ->values();
+
+        return view('feed.index', compact('posts', 'storyUsers'));
     }
 }

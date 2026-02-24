@@ -8,6 +8,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\StoryController;
 use Illuminate\Support\Facades\Route;
 
 // Auth routes (Breeze)
@@ -42,6 +43,11 @@ Route::middleware('auth')->group(function () {
 
     // Notifications
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications');
+
+    // Stories
+    Route::get('/stories/{user}', [StoryController::class, 'show'])->name('stories.show');
+    Route::post('/stories', [StoryController::class, 'store'])->name('stories.store');
+    Route::delete('/stories/{story}', [StoryController::class, 'destroy'])->name('stories.destroy');
 
     // Posts
     Route::get('/posts/create', [PostController::class, 'create'])->name('posts.create');

@@ -51,6 +51,11 @@ class User extends Authenticatable
         return $this->hasMany(Comment::class);
     }
 
+    public function stories(): HasMany
+    {
+        return $this->hasMany(Story::class)->latest();
+    }
+
     public function following(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'follows', 'follower_id', 'following_id')
