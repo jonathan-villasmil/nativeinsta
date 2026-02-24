@@ -71,7 +71,7 @@
         @if($post->caption)
             <div style="font-size:14px;margin-bottom:8px;">
                 <span style="font-weight:600;">{{ $post->user->username ?? $post->user->name }}</span>
-                @mention($post->caption)
+                @rendertext($post->caption)
             </div>
         @endif
 

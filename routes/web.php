@@ -3,6 +3,7 @@
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CommentLikeController;
 use App\Http\Controllers\FeedController;
+use App\Http\Controllers\HashtagController;
 use App\Http\Controllers\FollowController;
 use App\Http\Controllers\LikeController;
 use App\Http\Controllers\MessageController;
@@ -31,6 +32,9 @@ Route::get('/img/{path}', function (string $path) {
     return response()->file($fullPath, ['Content-Type' => $mime]);
 })->where('path', '.*')->name('img');
 
+
+// Hashtags (public)
+Route::get('/hashtags/{tag}', [HashtagController::class, 'show'])->name('hashtags.show');
 
 // Authenticated routes
 Route::middleware('auth')->group(function () {
