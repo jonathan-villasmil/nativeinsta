@@ -56,6 +56,24 @@ class MessageController extends Controller
 
         $conversation->update(['last_message_at' => now()]);
 
+        // ── DM notification ──────────────────────────────────────
+        // Use updateOrCreate so the notification is refreshed (read_at reset)
+        // every time a new message arrives, re-activating the bell even if
+        // the recipient had already read a previous notification from this sender.
+        if ($user->id !== auth()->id()) {
+            $user->appNotifications()->updateOrCreate(
+                [
+                    'actor_id'        => auth()->id(),
+                    'type'            => 'message',
+                    'notifiable_id'   => $conversation->id,
+                    'notifiable_type' => \App\Models\Conversation::class,
+                ],
+                [
+                    'read_at' => null,   // mark unread again on new message
+                ]
+            );
+        }
+
         return back();
     }
 }
