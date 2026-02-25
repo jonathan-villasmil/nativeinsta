@@ -210,7 +210,16 @@
         document.getElementById('sv-avatar').src   = s.user.avatar_url;
         document.getElementById('sv-username').textContent = s.user.username || s.user.name;
         document.getElementById('sv-username').href = s.user.profile_url;
-        document.getElementById('sv-time').textContent = s.created_at;
+
+        // Show "hace X · expira en Y"
+        const expiresAt  = new Date(s.expires_at);
+        const remaining  = expiresAt - Date.now();
+        const hoursLeft  = Math.max(0, Math.floor(remaining / 36e5));
+        const minsLeft   = Math.max(0, Math.floor((remaining % 36e5) / 6e4));
+        const timeLeft   = hoursLeft > 0 ? `${hoursLeft}h` : `${minsLeft}m`;
+        document.getElementById('sv-time').textContent =
+            `${s.created_at} · expira en ${timeLeft}`;
+
         document.getElementById('story-viewer').style.display = 'flex';
 
         // Progress bars
