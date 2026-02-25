@@ -87,17 +87,100 @@
                 </svg>
                 Inicio
             </a>
-            <a href="{{ route('search') }}" class="nav-item {{ request()->routeIs('search') ? 'active' : '' }}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="{{ request()->routeIs('search') ? '2.5' : '2' }}">
-                    <circle cx="11" cy="11" r="8"/>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                </svg>
-                Buscar
-            </a>
+            {{-- Live search --}}
+            <div id="sidebar-search-wrap" style="position:relative;margin:2px 8px;">
+                {{-- Looks identical to a nav-item --}}
+                <div style="display:flex;align-items:center;gap:16px;padding:12px 24px;
+                            border-radius:8px;cursor:text;transition:background 0.15s;"
+                     onclick="document.getElementById('sidebar-q').focus()"
+                     onmouseover="this.style.background='#f0f0f0'"
+                     onmouseout="document.getElementById('sidebar-q')===document.activeElement||(this.style.background='transparent')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                         style="width:24px;height:24px;flex-shrink:0;color:var(--text);">
+                        <circle cx="11" cy="11" r="8"/>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    <input id="sidebar-q" type="text" placeholder="Buscar"
+                           autocomplete="off"
+                           style="background:transparent;border:none;outline:none;
+                                  font-size:15px;font-family:inherit;
+                                  color:var(--text);width:100%;font-weight:400;"
+                           oninput="sidebarSearch(this.value)"
+                           onkeydown="if(event.key==='Enter'&&this.value.trim()) window.location='/search?q='+encodeURIComponent(this.value.trim())"
+                           onfocus="this.closest('div').style.background='#f0f0f0'"
+                           onblur="this.closest('div').style.background='transparent'">
+                </div>
+
+                {{-- Dropdown --}}
+                <div id="sidebar-dropdown"
+                     style="display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);
+                            background:var(--surface);border:1px solid var(--border);
+                            border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.10);
+                            z-index:9999;overflow:hidden;">
+                    <div id="sidebar-results"></div>
+                    <a id="sidebar-more" href="#"
+                       style="display:none;font-size:13px;color:var(--primary);text-align:center;
+                              padding:10px 14px;text-decoration:none;font-weight:600;
+                              border-top:1px solid var(--border);">
+                        Ver todos los resultados →
+                    </a>
+                </div>
+            </div>
+
+            <script>
+            let _sTimer;
+            function sidebarSearch(q) {
+                clearTimeout(_sTimer);
+                const drop    = document.getElementById('sidebar-dropdown');
+                const results = document.getElementById('sidebar-results');
+                const more    = document.getElementById('sidebar-more');
+                if (!q.trim()) { drop.style.display = 'none'; return; }
+                _sTimer = setTimeout(async () => {
+                    const token = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
+                    const data = await fetch('/search/autocomplete?q=' + encodeURIComponent(q), {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': token
+                        }
+                    }).then(r => r.json());
+                    results.innerHTML = !data.length
+                        ? '<p style="padding:16px;text-align:center;font-size:13px;color:var(--text-muted);margin:0;">Sin resultados</p>'
+                        : data.map(u => `
+                            <a href="${u.profile_url}"
+                               style="display:flex;align-items:center;gap:12px;padding:10px 16px;
+                                      text-decoration:none;color:var(--text);transition:background 0.15s;"
+                               onmouseover="this.style.background='var(--bg)'"
+                               onmouseout="this.style.background='transparent'">
+                                <img src="${u.avatar_url}"
+                                     style="width:40px;height:40px;border-radius:50%;object-fit:cover;
+                                            flex-shrink:0;border:1px solid var(--border);">
+                                <div style="min-width:0;">
+                                    <div style="font-weight:600;font-size:14px;
+                                                white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                        ${u.username}
+                                    </div>
+                                    <div style="font-size:12px;color:var(--text-muted);">
+                                        ${u.name} &middot; ${u.followers} seguidores
+                                    </div>
+                                </div>
+                            </a>`).join('');
+                    more.href = '/search?q=' + encodeURIComponent(q);
+                    more.style.display = 'block';
+                    drop.style.display = 'block';
+                }, 300);
+            }
+            document.addEventListener('click', function(e) {
+                if (!document.getElementById('sidebar-search-wrap').contains(e.target))
+                    document.getElementById('sidebar-dropdown').style.display = 'none';
+            });
+            </script>
+
             <a href="{{ route('explore') }}" class="nav-item {{ request()->routeIs('explore') ? 'active' : '' }}">
                 <svg viewBox="0 0 24 24" fill="{{ request()->routeIs('explore') ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="2">
-                    <circle cx="11" cy="11" r="8"/>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    <circle cx="12" cy="12" r="10"/>
+                    <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"
+                             fill="{{ request()->routeIs('explore') ? '#fff' : 'none' }}"
+                             stroke="{{ request()->routeIs('explore') ? 'currentColor' : 'currentColor' }}"/>
                 </svg>
                 Explorar
             </a>

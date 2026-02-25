@@ -64,6 +64,7 @@ Route::middleware('auth')->group(function () {
 
     // Search
     Route::get('/search', [SearchController::class, 'index'])->name('search');
+    Route::get('/search/autocomplete', [SearchController::class, 'autocomplete'])->name('search.autocomplete');
 
     // Comment likes
     Route::post('/comment-likes/{comment}', [CommentLikeController::class, 'toggle'])->name('comment-likes.toggle');
