@@ -47,8 +47,24 @@ class PostController extends Controller
 
     public function show(Post $post)
     {
-        $post->load(['user', 'likes', 'comments.user']);
-        return view('posts.show', compact('post'));
+        $authId = auth()->id();
+
+        $post->load([
+            'user',
+            'likes',
+            'comments.user',
+            // Eager load likes on each comment to avoid N+1
+            'comments.likes',
+        ]);
+
+        // Pre-compute which comments the current user has liked
+        // so the view never calls isLikedBy() (which hits the DB)
+        $likedCommentIds = $post->comments
+            ->filter(fn ($c) => $c->likes->contains('user_id', $authId))
+            ->pluck('id')
+            ->flip();   // flip so we can do isset($likedCommentIds[$id])
+
+        return view('posts.show', compact('post', 'likedCommentIds'));
     }
 
     public function destroy(Post $post)

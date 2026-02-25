@@ -50,7 +50,11 @@
                 @endif
 
                 @foreach($post->comments as $comment)
-                    @php $liked = $comment->isLikedBy(auth()->user()); @endphp
+                    @php
+                        // Both values come from already-loaded data — zero extra queries
+                        $likesCount = $comment->likes->count();
+                        $liked      = isset($likedCommentIds[$comment->id]);
+                    @endphp
                     <div style="display:flex;gap:10px;margin-bottom:12px;align-items:flex-start;">
                         <img src="{{ $comment->user->avatar_url }}"
                              style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;">
@@ -67,9 +71,9 @@
                                             · <em>editado</em>
                                         @endif
                                     </span>
-                                    @if($comment->likes()->count() > 0)
+                                    @if($likesCount > 0)
                                         <span style="font-size:11px;color:var(--text-muted);font-weight:600;">
-                                            {{ $comment->likes()->count() }} {{ $comment->likes()->count() === 1 ? 'me gusta' : 'me gustas' }}
+                                            {{ $likesCount }} {{ $likesCount === 1 ? 'me gusta' : 'me gustas' }}
                                         </span>
                                     @endif
                                     @if(auth()->id() === $comment->user_id)
