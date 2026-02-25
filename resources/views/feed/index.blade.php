@@ -195,7 +195,7 @@
     const DURATION = 5000; // 5 seconds per story
 
     async function loadStory(userId) {
-        const res = await fetch(`/stories/${userId}`);
+        const res = await apiFetch(`/stories/${userId}`);
         if (!res.ok) return;
         const data = await res.json();
         _stories = data.stories.map(s => ({ ...s, user: data.user }));
@@ -273,9 +273,7 @@
             spinner.style.display = 'block';
 
             try {
-                const res  = await fetch(`/feed?page=${nextPage}`, {
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                });
+                const res  = await apiFetch(`/feed?page=${nextPage}`);
                 const data = await res.json();
 
                 // Append new post cards

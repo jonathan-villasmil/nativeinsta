@@ -36,21 +36,23 @@ Route::get('/img/{path}', function (string $path) {
 // Hashtags (public)
 Route::get('/hashtags/{tag}', [HashtagController::class, 'show'])->name('hashtags.show');
 
-// Username availability check (public)
+// Username availability check — rate-limited to prevent enumeration
 Route::get('/check-username', function (\Illuminate\Http\Request $request) {
-    $username = $request->input('username', '');
-    if (strlen($username) < 3) {
-        return response()->json(['available' => null, 'message' => 'Mínimo 3 caracteres']);
+    $username = trim($request->input('username', ''));
+
+    if (strlen($username) < 3 || strlen($username) > 30) {
+        return response()->json(['available' => null, 'message' => 'Entre 3 y 30 caracteres']);
     }
     if (!preg_match('/^[a-zA-Z0-9_.]+$/', $username)) {
         return response()->json(['available' => false, 'message' => 'Solo letras, números, _ y .']);
     }
+
     $taken = \App\Models\User::where('username', $username)->exists();
     return response()->json([
         'available' => !$taken,
         'message'   => $taken ? 'Nombre de usuario ya en uso' : 'Disponible ✓',
     ]);
-})->name('check-username');
+})->middleware('throttle:8,1')->name('check-username');
 
 // Authenticated routes
 Route::middleware('auth')->group(function () {
