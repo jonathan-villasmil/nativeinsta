@@ -8,9 +8,38 @@ use Illuminate\Support\Facades\Storage;
 
 class ProfileController extends Controller
 {
-    public function show(User $user)
+    public function show(User $user, Request $request)
     {
-        $posts = $user->posts()->with(['likes', 'comments'])->paginate(12);
+        $posts = $user->posts()->with(['likes', 'comments'])->latest()->paginate(12);
+
+        if ($request->ajax()) {
+            $html = '';
+            foreach ($posts as $post) {
+                $likes    = $post->likes->count();
+                $comments = $post->comments->count();
+                $url      = route('posts.show', $post);
+                $img      = $post->image_url;
+                $html .= <<<HTML
+<a href="{$url}" style="display:block;aspect-ratio:1;overflow:hidden;position:relative;background:#efefef;">
+    <img src="{$img}" alt="post" style="width:100%;height:100%;object-fit:cover;transition:opacity 0.2s;"
+         onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:16px;
+                background:rgba(0,0,0,0);color:#fff;font-weight:600;font-size:15px;
+                opacity:0;transition:all 0.2s;"
+         onmouseover="this.style.opacity='1';this.style.background='rgba(0,0,0,0.35)'"
+         onmouseout="this.style.opacity='0';this.style.background='rgba(0,0,0,0)'">
+        <span>❤️ {$likes}</span>
+        <span>💬 {$comments}</span>
+    </div>
+</a>
+HTML;
+            }
+            return response()->json([
+                'html'     => $html,
+                'nextPage' => $posts->hasMorePages() ? $posts->currentPage() + 1 : null,
+            ]);
+        }
+
         return view('profile.show', compact('user', 'posts'));
     }
 
