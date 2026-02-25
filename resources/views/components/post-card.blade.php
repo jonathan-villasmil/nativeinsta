@@ -28,11 +28,29 @@
         @endif
     </div>
 
-    {{-- Image --}}
-    <a href="{{ route('posts.show', $post) }}">
+    {{-- Image — double-click / double-tap to like --}}
+    <div class="post-img-wrap" style="position:relative;overflow:hidden;cursor:pointer;
+         user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;"
+         data-post-id="{{ $post->id }}"
+         data-like-url="{{ route('likes.toggle', $post) }}"
+         data-post-url="{{ route('posts.show', $post) }}"
+         data-liked="{{ $post->isLikedBy(auth()->user()) ? '1' : '0' }}"
+         onclick="imgTap(event, this)">
+
         <img src="{{ $post->image_url }}" alt="post"
-             style="width:100%;display:block;max-height:600px;object-fit:cover;">
-    </a>
+             style="width:100%;display:block;max-height:600px;object-fit:cover;pointer-events:none;">
+
+        {{-- Heart animation overlay --}}
+        <div class="dbl-heart" style="display:none;position:absolute;inset:0;
+             pointer-events:none;align-items:center;justify-content:center;">
+            <svg viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="1"
+                 class="dbl-heart-icon"
+                 style="width:90px;height:90px;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.4));
+                        transform:scale(0);transition:transform 0.15s cubic-bezier(.34,1.56,.64,1);">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+        </div>
+    </div>
 
     {{-- Actions --}}
     <div style="padding:12px 16px 4px;">
@@ -63,7 +81,7 @@
         {{-- Like count --}}
         @if($post->likes->count() > 0)
             <div style="font-size:14px;font-weight:600;margin-bottom:6px;">
-                {{ $post->likes->count() }} {{ $post->likes->count() === 1 ? 'me gusta' : 'me gustas' }}
+                <span data-like-count>{{ $post->likes->count() }} {{ $post->likes->count() === 1 ? 'me gusta' : 'me gustas' }}</span>
             </div>
         @endif
 

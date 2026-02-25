@@ -168,8 +168,88 @@
 
 <style>
 @keyframes spin { to { transform: rotate(360deg); } }
+@keyframes heartFadeOut {
+    0%   { opacity: 1; }
+    70%  { opacity: 1; }
+    100% { opacity: 0; }
+}
+.dbl-heart { animation: none; }
+.dbl-heart.show { display: flex !important; animation: heartFadeOut 0.8s ease forwards; }
 </style>
 <script>
+    // ─── Double-click / double-tap to like ──────────────────────
+    var _tapTimers = {};
+    var _tapCounts = {};
+
+    function imgTap(e, wrap) {
+        e.preventDefault();
+        var id = wrap.dataset.postId;
+        _tapCounts[id] = (_tapCounts[id] || 0) + 1;
+
+        if (_tapCounts[id] >= 2) {
+            // Double tap → like
+            clearTimeout(_tapTimers[id]);
+            _tapCounts[id] = 0;
+            playHeart(wrap);
+            sendLike(wrap);
+            return;
+        }
+
+        // First tap — wait to see if a second comes
+        _tapTimers[id] = setTimeout(function() {
+            _tapCounts[id] = 0;
+            window.location.href = wrap.dataset.postUrl;
+        }, 280);
+    }
+
+    function playHeart(wrap) {
+        var overlay = wrap.querySelector('.dbl-heart');
+        var icon    = wrap.querySelector('.dbl-heart-icon');
+        icon.style.transform = 'scale(0)';
+        overlay.classList.remove('show');
+        overlay.style.display = 'flex';
+        void icon.offsetWidth; // force reflow
+        icon.style.transform = 'scale(1)';
+        overlay.classList.add('show');
+        overlay.addEventListener('animationend', function() {
+            overlay.style.display = 'none';
+            overlay.classList.remove('show');
+        }, { once: true });
+    }
+
+    function sendLike(wrap) {
+        var url   = wrap.dataset.likeUrl;
+        var token = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': token,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(function(r) { return r.ok ? r.json() : null; })
+        .then(function(data) {
+            if (!data) return;
+            wrap.dataset.liked = data.liked ? '1' : '0';
+            // Update heart icon in action bar
+            var card    = wrap.closest('div[style*="border-radius:12px"]') || wrap.parentElement.parentElement;
+            var likeBtn = card.querySelector('form[action*="/likes/"] svg');
+            if (likeBtn) {
+                likeBtn.setAttribute('fill',   data.liked ? '#ed4956' : 'none');
+                likeBtn.setAttribute('stroke', data.liked ? '#ed4956' : 'currentColor');
+            }
+            // Update like count
+            var countEl = card.querySelector('[data-like-count]');
+            if (countEl && data.count !== undefined) {
+                countEl.textContent = data.count + (data.count === 1 ? ' me gusta' : ' me gustas');
+                if (countEl.parentElement) countEl.parentElement.style.display = data.count > 0 ? 'block' : 'none';
+            }
+        })
+        .catch(function(){});
+    }
+
     // ─── Upload modal ──────────────────────────────────────────
     function openStoryUpload() {
         document.getElementById('upload-modal').style.display = 'flex';
