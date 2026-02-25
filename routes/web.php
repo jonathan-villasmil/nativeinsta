@@ -36,6 +36,22 @@ Route::get('/img/{path}', function (string $path) {
 // Hashtags (public)
 Route::get('/hashtags/{tag}', [HashtagController::class, 'show'])->name('hashtags.show');
 
+// Username availability check (public)
+Route::get('/check-username', function (\Illuminate\Http\Request $request) {
+    $username = $request->input('username', '');
+    if (strlen($username) < 3) {
+        return response()->json(['available' => null, 'message' => 'Mínimo 3 caracteres']);
+    }
+    if (!preg_match('/^[a-zA-Z0-9_.]+$/', $username)) {
+        return response()->json(['available' => false, 'message' => 'Solo letras, números, _ y .']);
+    }
+    $taken = \App\Models\User::where('username', $username)->exists();
+    return response()->json([
+        'available' => !$taken,
+        'message'   => $taken ? 'Nombre de usuario ya en uso' : 'Disponible ✓',
+    ]);
+})->name('check-username');
+
 // Authenticated routes
 Route::middleware('auth')->group(function () {
     // Feed

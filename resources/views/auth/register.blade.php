@@ -107,12 +107,19 @@
                     @enderror
                 </div>
 
-                <div class="form-group">
+                <div class="form-group" style="position:relative;">
                     <input class="form-input" type="text" name="username"
-                           value="{{ old('username') }}" placeholder="Nombre de usuario" required>
+                           id="username-input"
+                           value="{{ old('username') }}"
+                           placeholder="Nombre de usuario"
+                           required autocomplete="off"
+                           style="padding-right:32px;">
+                    <span id="username-icon"
+                          style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:14px;pointer-events:none;"></span>
                     @error('username')
                         <p class="error-msg">{{ $message }}</p>
                     @enderror
+                    <p id="username-feedback" style="font-size:11px;margin:3px 0 2px;min-height:14px;"></p>
                 </div>
 
                 <div class="form-group">
@@ -140,7 +147,7 @@
                     Al registrarte, aceptas nuestros Términos y Política de privacidad.
                 </p>
 
-                <button type="submit" class="btn-submit">Registrarse</button>
+                <button type="submit" class="btn-submit" id="submit-btn">Registrarse</button>
             </form>
         </div>
 
@@ -148,5 +155,71 @@
             ¿Tienes una cuenta? <a href="{{ route('login') }}">Inicia sesión</a>
         </div>
     </div>
+<script>
+(function () {
+    const input    = document.getElementById('username-input');
+    const feedback = document.getElementById('username-feedback');
+    const icon     = document.getElementById('username-icon');
+    const submit   = document.getElementById('submit-btn');
+    let   timer    = null;
+    let   ok       = {{ old('username') ? 'true' : 'false' }};
+
+    // Restore submit state on page load (e.g. after server error)
+    if (input.value.length >= 3) checkUsername(input.value);
+
+    input.addEventListener('input', function () {
+        clearTimeout(timer);
+        const val = this.value.trim();
+        if (!val) { reset(); return; }
+        setChecking();
+        timer = setTimeout(() => checkUsername(val), 400);
+    });
+
+    function checkUsername(val) {
+        fetch(`/check-username?username=${encodeURIComponent(val)}`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.available === true) {
+                    setAvailable(data.message);
+                } else if (data.available === false) {
+                    setTaken(data.message);
+                } else {
+                    setNeutral(data.message);
+                }
+            })
+            .catch(() => reset());
+    }
+
+    function setChecking() {
+        icon.textContent = '⏳';
+        feedback.style.color = '#8e8e8e';
+        feedback.textContent = 'Comprobando…';
+        submit.disabled = true; ok = false;
+    }
+    function setAvailable(msg) {
+        icon.textContent = '✅';
+        feedback.style.color = '#2ecc71';
+        feedback.textContent = msg;
+        submit.disabled = false; ok = true;
+    }
+    function setTaken(msg) {
+        icon.textContent = '❌';
+        feedback.style.color = '#ed4956';
+        feedback.textContent = msg;
+        submit.disabled = true; ok = false;
+    }
+    function setNeutral(msg) {
+        icon.textContent = '';
+        feedback.style.color = '#8e8e8e';
+        feedback.textContent = msg;
+        submit.disabled = true; ok = false;
+    }
+    function reset() {
+        icon.textContent = '';
+        feedback.textContent = '';
+        submit.disabled = false;
+    }
+})();
+</script>
 </body>
 </html>

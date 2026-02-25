@@ -33,6 +33,10 @@ class Post extends Model
 
     public function getImageUrlAttribute(): string
     {
+        // Seeded posts use external URLs (picsum.photos) — return as-is
+        if (str_starts_with($this->image_path, 'http')) {
+            return $this->image_path;
+        }
         return route('img', ['path' => $this->image_path]);
     }
 }
