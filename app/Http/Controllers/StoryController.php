@@ -38,7 +38,81 @@ class StoryController extends Controller
                 'image_url'  => $s->image_url,
                 'created_at' => $s->created_at->diffForHumans(),
                 'expires_at' => $s->expires_at->toIso8601String(),
+                'view_count' => $s->views()->count(),
+                'like_count' => $s->likes()->count(),
+                'is_liked'   => $s->isLikedBy(auth()->user()),
+                'is_owner'   => $s->user_id === auth()->id(),
             ]),
+        ]);
+    }
+
+    /**
+     * Toggle like on a story.
+     */
+    public function toggleLike(Story $story)
+    {
+        $user = auth()->user();
+        $like = $story->likes()->where('user_id', $user->id)->first();
+
+        if ($like) {
+            $like->delete();
+            $liked = false;
+        } else {
+            $story->likes()->create(['user_id' => $user->id]);
+            $liked = true;
+        }
+
+        return response()->json([
+            'liked' => $liked,
+            'count' => $story->likes()->count(),
+        ]);
+    }
+
+    /**
+     * Return the list of viewers for a story (owner only).
+     */
+    public function views(Story $story)
+    {
+        abort_if($story->user_id !== auth()->id(), 403);
+
+        $viewers = $story->views()
+            ->with('user')
+            ->latest()
+            ->get()
+            ->map(fn ($v) => [
+                'username'    => $v->user->username ?? $v->user->name,
+                'name'        => $v->user->name,
+                'avatar_url'  => $v->user->avatar_url,
+                'profile_url' => route('profile.show', $v->user),
+            ]);
+
+        return response()->json([
+            'count'   => $viewers->count(),
+            'viewers' => $viewers,
+        ]);
+    }
+
+    /**
+     * Return the list of likers for a story (owner only).
+     */
+    public function likers(Story $story)
+    {
+        abort_if($story->user_id !== auth()->id(), 403);
+
+        $likers = $story->likes()
+            ->with('user')
+            ->latest()
+            ->get()
+            ->map(fn ($l) => [
+                'username'    => $l->user->username ?? $l->user->name,
+                'name'        => $l->user->name,
+                'avatar_url'  => $l->user->avatar_url,
+                'profile_url' => route('profile.show', $l->user),
+            ]);
+
+        return response()->json([
+            'count'  => $likers->count(),
+            'likers' => $likers,
         ]);
     }
 

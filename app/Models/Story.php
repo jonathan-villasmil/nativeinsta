@@ -39,6 +39,17 @@ class Story extends Model
         return $this->views()->where('user_id', $user->id)->exists();
     }
 
+    public function likes(): HasMany
+    {
+        return $this->hasMany(StoryLike::class);
+    }
+
+    public function isLikedBy(?User $user): bool
+    {
+        if (!$user) return false;
+        return $this->likes()->where('user_id', $user->id)->exists();
+    }
+
     public function getImageUrlAttribute(): string
     {
         return route('img', ['path' => $this->image_path]);

@@ -74,6 +74,9 @@ Route::middleware('auth')->group(function () {
 
     // Stories
     Route::get('/stories/{user}', [StoryController::class, 'show'])->name('stories.show');
+    Route::get('/stories/{story}/views', [StoryController::class, 'views'])->name('stories.views');
+    Route::get('/stories/{story}/likes', [StoryController::class, 'likers'])->name('stories.likers');
+    Route::post('/stories/{story}/like', [StoryController::class, 'toggleLike'])->name('stories.like');
     Route::post('/stories', [StoryController::class, 'store'])->name('stories.store');
     Route::delete('/stories/{story}', [StoryController::class, 'destroy'])->name('stories.destroy');
 
